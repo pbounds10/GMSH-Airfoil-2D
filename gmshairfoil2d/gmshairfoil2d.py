@@ -266,9 +266,9 @@ def main():
             gmsh.model.mesh.field.setAsBoundaryLayer(f)
 
         # Define boundary conditions (name the curves)
-        ext_domain.define_bc()
-        surface.define_bc()
-        airfoil.define_bc()
+        # ext_domain.define_bc()
+        # surface.define_bc()
+        # airfoil.define_bc()
 
     gmsh.model.geo.synchronize()
 
@@ -294,6 +294,27 @@ def main():
     # Generate mesh
     gmsh.model.mesh.generate(2)
     gmsh.model.mesh.optimize("Laplace2D", 5)
+    h = 1
+    extrude_surface = gmsh.model.geo.extrude([(2, 1)], 0, 0, h, numElements=[1], recombine=True)
+    gmsh.model.geo.synchronize()
+    gmsh.model.addPhysicalGroup(2, tags=[1], name="back")
+    gmsh.model.addPhysicalGroup(2, tags=[extrude_surface[0][1]], name="front")
+    farfield_surface_indices = []
+    for surf_index in extrude_surface[2:-3]:
+        farfield_surface_indices.append(surf_index[1])
+    gmsh.model.addPhysicalGroup(2, tags=farfield_surface_indices, name=f"farfield")
+
+    airfoil_surface_indices = []
+    for surf_index in extrude_surface[-3:]:
+        airfoil_surface_indices.append(surf_index[1])
+    gmsh.model.addPhysicalGroup(2, tags=airfoil_surface_indices, name=f"airfoil")
+
+    gmsh.model.addPhysicalGroup(3, tags=[extrude_surface[1][1]], tag=10001, name="fluid_volume")
+    gmsh.model.geo.synchronize()
+
+    gmsh.model.mesh.generate(3)
+    # gmsh.model.mesh.optimize()
+
 
     # Open user interface of GMSH
     if args.ui:
