@@ -3,9 +3,10 @@ from pathlib import Path
 import numpy as np
 import requests
 
-import gmshairfoil2d.__init__
+# import gmshairfoil2d.__init__
 
-LIB_DIR = Path(gmshairfoil2d.__init__.__file__).parents[1]
+# LIB_DIR = Path(gmshairfoil2d.__init__.__file__).parents[1]
+LIB_DIR = Path(__file__).parents[1]
 database_dir = Path(LIB_DIR, "database")
 
 
@@ -59,7 +60,7 @@ def get_airfoil_file(airfoil_name):
             f.write(r.content)
 
 
-def get_airfoil_points(airfoil_name):
+def get_airfoil_points(airfoil_name, local=False):
 
     airfoil_points = []
     upper_points = []
@@ -68,8 +69,11 @@ def get_airfoil_points(airfoil_name):
     lower_len = 0
     reverse_lower = False
 
-    get_airfoil_file(airfoil_name)
-    airfoil_file = Path(database_dir, airfoil_name + ".dat")
+    if local:
+        airfoil_file = airfoil_name
+    else:
+        get_airfoil_file(airfoil_name)
+        airfoil_file = Path(database_dir, airfoil_name + ".dat")
 
     with open(airfoil_file) as f:
         lines = f.readlines()
