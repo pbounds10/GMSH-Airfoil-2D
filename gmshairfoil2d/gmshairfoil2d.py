@@ -3,15 +3,17 @@
 
 import argparse
 import math
+import os
 import sys
 from pathlib import Path
-import numpy as np
 
 import gmsh
-from gmshairfoil2d.airfoil_func import (NACA_4_digit_geom, get_airfoil_points,
+import numpy as np
+
+from airfoil_func import (NACA_4_digit_geom, get_airfoil_points,
                                         get_all_available_airfoil_names)
-from gmshairfoil2d.geometry_def import (AirfoilSpline, Circle, PlaneSurface,
-                                        Rectangle, outofbounds, CType)
+from geometry_def import (AirfoilSpline, Circle, CType,
+                                        PlaneSurface, Rectangle, outofbounds)
 
 
 def main():
@@ -44,6 +46,14 @@ def main():
         metavar="NAME",
         nargs="?",
         help="Name of an airfoil profile in the database (database available with the --list argument)",
+    )
+
+    parser.add_argument(
+        "--local_airfoil",
+        type=str,
+        metavar="NAME",
+        nargs="?",
+        help="path of an airfoil profile on the local machine",
     )
 
     parser.add_argument(
@@ -175,6 +185,11 @@ def main():
         airfoil_name = args.airfoil
         cloud_points = get_airfoil_points(airfoil_name)
 
+    if args.local_airfoil:
+        airfoil_path = args.local_airfoil
+        airfoil_name = os.path.basename(airfoil_path).split(".")[0]
+        cloud_points = get_airfoil_points(airfoil_path, local=True)
+
     if cloud_points is None:
         print("\nNo airfoil profile specified, exiting")
         print("You must use --naca or --airfoil\n")
@@ -292,6 +307,7 @@ def main():
         gmsh.option.setNumber("Mesh.BoundaryLayerFanElements", coef)
 
     # Generate mesh
+    gmsh.model.geo.synchronize()
     gmsh.model.mesh.generate(2)
     gmsh.model.mesh.optimize("Laplace2D", 5)
     h = 1
