@@ -133,3 +133,5 @@ dmypy.json
 
 #Ignore the database file containing the airfoil profile
 database
+
+tmp
